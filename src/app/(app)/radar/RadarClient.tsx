@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 export type PautaView = {
@@ -230,6 +231,11 @@ function CardItem({ item, onMudarStatus }: { item: PautaView; onMudarStatus: (id
               Dispensar
             </button>
           </>
+        )}
+        {item.status === "apuracao" && (
+          <Link href={`/apuracao/${item.id}`} className="rounded-md bg-brand-500 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-brand-600">
+            Abrir sala de apuração →
+          </Link>
         )}
         <a href={item.urlOrigem} target="_blank" rel="noreferrer" className="text-xs font-bold text-brand-600 hover:text-brand-700">
           Abrir fonte ↗
