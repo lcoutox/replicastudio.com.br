@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { atualizarStatusPauta } from "@/lib/db/pautaRepository";
+import { getOuCriarApuracao } from "@/lib/db/apuracaoRepository";
 
 export const runtime = "nodejs";
 
@@ -14,5 +15,12 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
 
   const pauta = await atualizarStatusPauta(id, analisado.data.status);
+
+  // Sala de apuração nasce junto com a transição de status — sem passo
+  // manual extra de "criar sala".
+  if (analisado.data.status === "apuracao") {
+    await getOuCriarApuracao(id);
+  }
+
   return NextResponse.json(pauta);
 }

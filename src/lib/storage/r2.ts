@@ -48,3 +48,26 @@ export async function subirImagem(png: Buffer, prefixo: "foto" | "card"): Promis
 
   return `${urlPublica.replace(/\/$/, "")}/${chave}`;
 }
+
+/**
+ * Sobe um arquivo qualquer (PDF, imagem etc.) anexado como fonte na sala de
+ * apuração. Mesmo bucket dos posts, prefixo próprio pra não misturar.
+ */
+export async function subirArquivo(conteudo: Buffer, nomeOriginal: string, contentType: string): Promise<string> {
+  const bucket = obrigatorio("R2_BUCKET");
+  const urlPublica = obrigatorio("R2_PUBLIC_URL");
+  const extensao = nomeOriginal.includes(".") ? nomeOriginal.slice(nomeOriginal.lastIndexOf(".")) : "";
+  const chave = `apuracao/${randomUUID()}${extensao}`;
+
+  const cliente = clienteR2();
+  await cliente.send(
+    new PutObjectCommand({
+      Bucket: bucket,
+      Key: chave,
+      Body: conteudo,
+      ContentType: contentType,
+    }),
+  );
+
+  return `${urlPublica.replace(/\/$/, "")}/${chave}`;
+}

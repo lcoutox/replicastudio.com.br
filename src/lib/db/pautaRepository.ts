@@ -51,6 +51,10 @@ export async function atualizarStatusPauta(id: string, status: StatusPauta): Pro
   return prisma.pauta.update({ where: { id }, data: { status } });
 }
 
+export async function getPautaPorId(id: string): Promise<PautaComFonte | null> {
+  return prisma.pauta.findUnique({ where: { id }, include: { fonte: true } });
+}
+
 /**
  * Diário Oficial grava um Pauta por ATO (chaveExterna = "{edicao}-{indice}"),
  * não um por edição — então "já vi essa edição" não é mais uma checagem de
