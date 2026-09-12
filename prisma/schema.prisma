@@ -1,0 +1,83 @@
+// Modelo de dados do v1 — ver docs/PRD.md secao 5.
+// Workspace e BrandKit ja existem como tabelas separadas mesmo com uma linha so hoje,
+// para nao exigir migracao estrutural se/quando o produto virar multi-tenant.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Workspace {
+  id        String     @id @default(cuid())
+  nome      String
+  criadoEm  DateTime   @default(now())
+  brandKit  BrandKit?
+  posts     PostGerado[]
+
+  @@map("workspace")
+}
+
+model BrandKit {
+  id          String    @id @default(cuid())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  workspaceId String    @unique
+
+  corAzul   String
+  corPreto  String
+  corBranco String
+  corCinza  String
+
+  logoPositivoSvg String @db.Text
+  logoNegativoSvg String @db.Text
+  aspaSvg         String @db.Text
+
+  fonteManchetefoto String // ex.: "Archivo Black"
+  fonteRotulo       String // ex.: "Noto Sans"
+  fonteManchetecard String // ex.: "Noto Serif"
+
+  atualizadoEm DateTime @updatedAt
+
+  @@map("brand_kit")
+}
+
+/// Tipo de template — o "layout" da peça (não confundir com Tamanho).
+enum TipoTemplate {
+  foto
+  card
+}
+
+/// Tamanho de saída — o que Instagram chama de posicionamento. Eixo
+/// independente do TipoTemplate: qualquer TipoTemplate pode sair em
+/// qualquer Tamanho.
+enum Tamanho {
+  feed
+  stories
+}
+
+enum TemaPost {
+  claro
+  escuro
+}
+
+model PostGerado {
+  id          String      @id @default(cuid())
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id])
+  workspaceId String
+
+  tipo          TipoTemplate
+  tamanho       Tamanho      @default(feed)
+  tagOuRotulo   String
+  manicheteRaw  String      @db.Text // texto com a sintaxe **destaque** preservada
+  tema          TemaPost? // só usado quando tipo = card
+  imagemOrigemUrl  String? // upload usado como fundo, só quando tipo = foto
+  imagemResultadoUrl String // arquivo final, guardado no R2
+
+  criadoEm DateTime @default(now())
+
+  @@map("post_gerado")
+  @@index([workspaceId, criadoEm])
+}
