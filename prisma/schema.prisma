@@ -139,7 +139,67 @@ model Pauta {
   justificativaIA    String?     @db.Text
   descarteAutomatico Boolean     @default(false) // true = status=dispensada decidido pela pontuação, não por você
 
+  apuracao Apuracao?
+
   @@unique([fonteId, chaveExterna])
   @@index([fonteId, status])
   @@map("pauta")
+}
+
+/// Sala de apuração — ver docs/PRD.md seção 10. Criada quando uma Pauta
+/// muda pra status "apuracao". Substitui o dossiê em Markdown do
+/// repositório `replica`: o dossie aqui É o registro permanente.
+model Apuracao {
+  id           String   @id @default(cuid())
+  pauta        Pauta    @relation(fields: [pautaId], references: [id])
+  pautaId      String   @unique
+  dossie       String   @db.Text @default("")
+  criadoEm     DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  fontes    FonteApuracao[]
+  mensagens MensagemApuracao[]
+
+  @@map("apuracao")
+}
+
+enum TipoFonteApuracao {
+  link
+  arquivo
+  nota
+}
+
+/// Fonte anexada na sala — o campo `tipo` é o que preserva a distinção
+/// entre fonte verificável (link, arquivo) e informação solta sem
+/// documento formal (nota), regra já em vigor no repo `replica`: não
+/// publicar fato sem fonte registrada.
+model FonteApuracao {
+  id         String            @id @default(cuid())
+  apuracao   Apuracao          @relation(fields: [apuracaoId], references: [id])
+  apuracaoId String
+  tipo       TipoFonteApuracao
+  conteudo   String            @db.Text // URL (link) ou o texto da nota (nota); vazio quando tipo=arquivo
+  arquivoUrl String? // só quando tipo = arquivo, sobe pro R2
+  descricao  String?
+  criadoEm   DateTime          @default(now())
+
+  @@index([apuracaoId])
+  @@map("fonte_apuracao")
+}
+
+enum PapelMensagem {
+  usuario
+  agente
+}
+
+model MensagemApuracao {
+  id         String        @id @default(cuid())
+  apuracao   Apuracao      @relation(fields: [apuracaoId], references: [id])
+  apuracaoId String
+  papel      PapelMensagem
+  conteudo   String        @db.Text
+  criadoEm   DateTime      @default(now())
+
+  @@index([apuracaoId, criadoEm])
+  @@map("mensagem_apuracao")
 }
