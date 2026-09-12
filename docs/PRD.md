@@ -33,7 +33,7 @@ Registrar aqui evita que o escopo infle sozinho. Fora do v1:
 - **Multi-tenant real** (múltiplos veículos/contas). O modelo de dados prevê `workspace`, mas só um existirá.
 - **Autenticação multi-usuário / billing.** Um gate simples de login (usuário único) resolve.
 - **Integração com Sanity** (ou qualquer CMS). Publicar a matéria no site continua um processo manual/separado, como hoje.
-- **Radar de pauta, apuração, redação.** Esse fluxo continua no repositório `replica`, via Claude Code. Não migrar agora.
+- ~~**Radar de pauta, apuração, redação.** Esse fluxo continua no repositório `replica`, via Claude Code. Não migrar agora.~~ **Revisto em 2026-09-12:** radar (v0.2.0) e sala de apuração (ver seção 10) migraram pra dentro do app — passam a substituir o fluxo `radar/` e `apuracao/` do repositório `replica`. Redação (`redacao/`) continua fora por enquanto, é a próxima fase depois de validar a sala de apuração em uso real.
 - **Editor de templates customizável pelo usuário.** Os dois formatos (foto, card sólido) são fixos no código nesta fase; virar "templates editáveis" é decisão de v2+.
 
 ## 5. Modelo de dados inicial
@@ -100,3 +100,59 @@ v1 implementado e verificado localmente em 2026-09-12 (ver `README.md` para roda
 **Limitação conhecida:** as fontes Noto Sans/Noto Serif embarcadas (`src/lib/render/fonts/`) vieram de pacotes `@fontsource/*` nos pesos 700/800 — o Google Fonts parou de distribuir instâncias estáticas dessas famílias (só fonte variável, que o parser de fontes do Satori não sustenta, `fvar` quebra o parser). Se um dia o peso visual não bater com o esperado, a correção é só trocar esses arquivos, não mexer em código.
 
 **Ainda não provisionado (depende de contas externas do usuário):** banco Postgres no Railway, bucket no Cloudflare R2, deploy do serviço. Ver `README.md`.
+
+## 10. Sala de Apuração (2026-09-12)
+
+### Contexto
+
+O radar (seção anterior) resolve "descobrir pauta". Depois disso, a apuração de verdade (juntar fonte, confirmar fato, registrar o que ainda falta) continuava acontecendo fora do app, como arquivo Markdown no repositório `replica` via sessão de Claude Code. Essa seção substitui aquele fluxo.
+
+**Por que trazer pra dentro do app, e não deixar como estava:** ter dois lugares onde "apuração acontece" (Markdown+terminal de um lado, banco de dados do outro) cria ambiguidade sobre onde está a verdade de cada pauta. A sala de apuração vira o único lugar.
+
+### Objetivo
+
+Uma "sala" por pauta (criada quando a pauta muda de status pra `apuracao` no radar) onde:
+- O usuário anexa fontes: link, arquivo (PDF/imagem) ou uma nota de texto solta (informação que ele sabe mas não tem documento formal — precisa continuar visualmente distinta de fonte verificável, é a mesma regra do `replica/CLAUDE.md`: "não publique fato sem fonte registrada").
+- O usuário conversa com um agente pra pedir ajuda: resumir uma fonte anexada, checar contradição entre fontes, ou **buscar na web** quando pedido explicitamente — não é navegação autônoma de fundo, é sob comando.
+- O agente pode **propor** trechos pro dossiê da pauta, mas não escreve nele sozinho. O dossiê (o registro permanente, equivalente ao arquivo Markdown de hoje) só muda quando o humano aceita ou edita a proposta — mesmo princípio de confiança já usado no radar (IA propõe pontuação/resumo, descarte automático é reversível e auditável).
+
+### Modelo de dados
+
+```
+apuracao (1:1 com pauta)
+  id, pauta_id
+  dossie (texto — a síntese "o que já sabemos", equivalente ao arquivo Markdown de hoje)
+  criado_em, atualizado_em
+
+fonte_apuracao (N:1 com apuracao)
+  id, apuracao_id
+  tipo ("link" | "arquivo" | "nota")
+  conteudo (URL, ou o texto da nota)
+  arquivo_url (só quando tipo = arquivo — sobe pro R2, mesmo bucket dos posts)
+  descricao (opcional, texto livre)
+  criado_em
+
+mensagem_apuracao (N:1 com apuracao)
+  id, apuracao_id
+  papel ("usuario" | "agente")
+  conteudo (texto)
+  criado_em
+```
+
+### Decisões técnicas
+
+- **Modelo:** Sonnet, não Haiku. O radar usa Haiku porque classificar é tarefa objetiva e barata rodando em lote; apurar é julgamento editorial — qualidade do modelo importa, e é um uso deliberado (o usuário abrindo a sala), não algo rodando em massa.
+- **Busca web:** ferramenta de web search nativa da API da Anthropic (server-side, com citação de fonte embutida) — não scraping customizado nem API de busca de terceiro. Só é chamada quando o agente decide que faz sentido responder ao pedido do usuário, nunca em background.
+- **Upload de arquivo:** reaproveita o cliente R2 já usado pros posts gerados (`src/lib/storage/r2.ts`), sem infra nova.
+- **Confiança:** o agente nunca escreve direto no `dossie` — toda proposta de texto aparece na conversa como algo a aceitar/editar, nunca como fato já registrado.
+
+### Não-objetivos desta fase
+
+- **Sala de redação** (escrever/revisar a matéria, humanização de texto de agente). Fase seguinte, só depois de validar a sala de apuração em uso real. A skill `journalism-core:ai-writing-detox` já existe e cobre a humanização quando chegar a hora.
+- **Navegação web autônoma sem pedido** — o agente só busca quando o usuário pede explicitamente nesta fase.
+- **Migração de pautas já em andamento no repositório `replica`** — decisão de como (ou se) migrar apuração em progresso fica pra depois; pautas novas do radar entram direto no fluxo novo.
+
+### Riscos
+
+- Ferramenta de busca web da Anthropic é nova nesta integração (nunca usada nesta app) — precisa validação empírica de schema/comportamento antes de confiar, mesmo que a API seja first-party.
+- Custo por sala é maior que o do radar (Sonnet + possível busca web) — aceitável por ser ação deliberada do usuário, mas vale monitorar se o padrão de uso mudar.
