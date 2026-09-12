@@ -18,6 +18,13 @@ model Workspace {
   brandKit  BrandKit?
   posts     PostGerado[]
 
+  /// Foco editorial por abrangência — ex.: [{escopo: "nova-serrana", editoriasPrioritarias: ["politica","saude","cultura"]}].
+  /// Formato validado em src/lib/domain/linhaEditorial.ts. Usado pra pontuar
+  /// pauta no radar: fora do foco declarado pontua baixo mesmo sendo "notícia"
+  /// em tese. JSON em vez de tabela própria — é config de leitura simples, sem
+  /// necessidade de query relacional nem tela de edição ainda.
+  linhaEditorial Json?
+
   @@map("workspace")
 }
 
@@ -80,4 +87,59 @@ model PostGerado {
 
   @@map("post_gerado")
   @@index([workspaceId, criadoEm])
+}
+
+/// Como o conteúdo de uma Fonte é obtido e comparado com a última checagem.
+/// api_json: dados abertos estruturados (ex.: portal da prefeitura) — sem
+///   scraping, diffing por chave (nº de edição, id de processo etc.).
+/// manual: sem automação ainda (ex.: redes sociais de concorrentes,
+///   bloqueadas pra scraping) — existe só como registro no radar.
+enum EstrategiaFonte {
+  api_json
+  manual
+}
+
+model Fonte {
+  id          String          @id @default(cuid())
+  nome        String
+  categoria   String          // rótulo livre pro filtro na UI: "diario-oficial" | "licitacoes" | "imprensa" etc.
+  escopo      String          // chave que casa com linhaEditorial.escopo no Workspace — ex.: "nova-serrana" | "nacional".
+  estrategia  EstrategiaFonte
+  urlApi      String?         // endpoint de dados abertos, só quando estrategia = api_json
+  urlPagina   String          // página pública equivalente, usada no link "abrir fonte"
+  ativo       Boolean         @default(true)
+  criadoEm    DateTime        @default(now())
+  pautas      Pauta[]
+
+  @@unique([categoria])
+  @@map("fonte")
+}
+
+enum StatusPauta {
+  pendente
+  apuracao
+  dispensada
+}
+
+model Pauta {
+  id           String      @id @default(cuid())
+  fonte        Fonte       @relation(fields: [fonteId], references: [id])
+  fonteId      String
+  chaveExterna String      // identificador da fonte de origem (nº de edição, id de processo) — evita duplicar em novas checagens
+  titulo       String
+  resumo       String?     @db.Text
+  urlOrigem    String
+  publicadoEm  DateTime?
+  descobertoEm DateTime    @default(now())
+  status       StatusPauta @default(pendente)
+
+  // Classificação automática (Haiku) — ver src/lib/radar/classificar.ts.
+  pontuacao          Int?        // 0-10, soma da régua em src/lib/domain/classificacaoPauta.ts
+  categorias         String[]    @default([]) // editorias que a IA identificou (ex.: ["saude"])
+  justificativaIA    String?     @db.Text
+  descarteAutomatico Boolean     @default(false) // true = status=dispensada decidido pela pontuação, não por você
+
+  @@unique([fonteId, chaveExterna])
+  @@index([fonteId, status])
+  @@map("pauta")
 }
