@@ -78,8 +78,10 @@ export function RadarClient({ pautasIniciais }: { pautasIniciais: PautaView[] })
     }
   }
 
-  const pendentes = itens.filter((i) => i.status === "pendente" && (filtro === "todas" || i.fonte.categoria === filtro));
-  const tratadas = itens.filter((i) => i.status !== "pendente" && (filtro === "todas" || i.fonte.categoria === filtro));
+  const combinaFiltro = (i: PautaView) => filtro === "todas" || i.fonte.categoria === filtro;
+  const pendentes = itens.filter((i) => i.status === "pendente" && combinaFiltro(i));
+  const emApuracao = itens.filter((i) => i.status === "apuracao" && combinaFiltro(i));
+  const dispensadas = itens.filter((i) => i.status === "dispensada" && combinaFiltro(i));
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-8">
@@ -126,7 +128,7 @@ export function RadarClient({ pautasIniciais }: { pautasIniciais: PautaView[] })
             <p className="text-sm text-neutral-500">Nenhuma pauta ainda — clique em &quot;Atualizar agora&quot; pra checar as fontes.</p>
           </div>
         )}
-        {itens.length > 0 && pendentes.length === 0 && (
+        {itens.length > 0 && pendentes.length === 0 && emApuracao.length === 0 && (
           <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-0 px-6 py-14 text-center">
             <p className="text-sm text-neutral-500">Nenhuma pauta pendente com esse filtro.</p>
           </div>
@@ -136,18 +138,31 @@ export function RadarClient({ pautasIniciais }: { pautasIniciais: PautaView[] })
         ))}
       </div>
 
-      {tratadas.length > 0 && (
+      {emApuracao.length > 0 && (
+        <div className="mt-6">
+          <h2 className="mb-2.5 text-xs font-bold tracking-wide text-neutral-500 uppercase">
+            Em apuração ({emApuracao.length})
+          </h2>
+          <div className="flex flex-col gap-2.5">
+            {emApuracao.map((item) => (
+              <CardItem key={item.id} item={item} onMudarStatus={mudarStatus} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {dispensadas.length > 0 && (
         <div className="mt-6">
           <button
             type="button"
             onClick={() => setMostrarTratadas((v) => !v)}
             className="cursor-pointer text-xs font-bold text-neutral-500 hover:text-neutral-700"
           >
-            {mostrarTratadas ? "Ocultar" : "Ver"} {tratadas.length} pauta{tratadas.length > 1 ? "s" : ""} já tratada{tratadas.length > 1 ? "s" : ""} →
+            {mostrarTratadas ? "Ocultar" : "Ver"} {dispensadas.length} pauta{dispensadas.length > 1 ? "s" : ""} dispensada{dispensadas.length > 1 ? "s" : ""} →
           </button>
           {mostrarTratadas && (
             <div className="mt-3 flex flex-col gap-2.5 opacity-60">
-              {tratadas.map((item) => (
+              {dispensadas.map((item) => (
                 <CardItem key={item.id} item={item} onMudarStatus={mudarStatus} />
               ))}
             </div>

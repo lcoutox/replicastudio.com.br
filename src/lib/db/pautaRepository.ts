@@ -55,6 +55,17 @@ export async function getPautaPorId(id: string): Promise<PautaComFonte | null> {
   return prisma.pauta.findUnique({ where: { id }, include: { fonte: true } });
 }
 
+/** Pautas com sala de apuração ativa — usado na lista central de salas (ver src/app/(app)/apuracao/page.tsx). */
+export async function listarPautasEmApuracao(): Promise<(PautaComFonte & { apuracao: { atualizadoEm: Date } | null })[]> {
+  const pautas = await prisma.pauta.findMany({
+    where: { status: "apuracao" },
+    include: { fonte: true, apuracao: { select: { atualizadoEm: true } } },
+  });
+  // Sala com atividade mais recente primeiro — ordenado em memória porque a
+  // lista é sempre pequena (número de apurações simultâneas de um jornalista).
+  return pautas.sort((a, b) => (b.apuracao?.atualizadoEm.getTime() ?? 0) - (a.apuracao?.atualizadoEm.getTime() ?? 0));
+}
+
 /**
  * Diário Oficial grava um Pauta por ATO (chaveExterna = "{edicao}-{indice}"),
  * não um por edição — então "já vi essa edição" não é mais uma checagem de
