@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Link from "next/link";
 
 export type PautaView = {
   id: string;
@@ -17,6 +16,7 @@ export type PautaView = {
 };
 
 const formatoData = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+const LIMIAR_RELEVANTE = 5;
 
 export function RadarClient({ pautasIniciais }: { pautasIniciais: PautaView[] }) {
   const [itens, setItens] = useState(pautasIniciais);
@@ -81,89 +81,54 @@ export function RadarClient({ pautasIniciais }: { pautasIniciais: PautaView[] })
   const tratadas = itens.filter((i) => i.status !== "pendente" && (filtro === "todas" || i.fonte.categoria === filtro));
 
   return (
-    <main style={{ maxWidth: 760, margin: "0 auto", padding: "28px 20px 64px" }}>
-      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-muted)", margin: 0 }}>Radar de pautas</h1>
-        <nav style={{ display: "flex", gap: 16 }}>
-          <Link href="/" style={{ fontSize: 13, fontWeight: 700 }}>
-            ← Editor
-          </Link>
-          <Link href="/historico" style={{ fontSize: 13, fontWeight: 700 }}>
-            Histórico
-          </Link>
-        </nav>
-      </header>
-      <p style={{ fontSize: 12.5, color: "var(--text-muted)", margin: "0 0 22px" }}>
-        Diário Oficial e licitações de Nova Serrana, via dados abertos da prefeitura.
-      </p>
+    <main className="mx-auto max-w-3xl px-5 py-8">
+      <h1 className="mb-1 font-serif text-2xl font-semibold text-neutral-900">Radar de pautas</h1>
+      <p className="mb-6 text-sm text-neutral-500">Diário Oficial e licitações de Nova Serrana, via dados abertos da prefeitura.</p>
 
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 16,
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderRadius: 4,
-          padding: 16,
-          marginBottom: 12,
-        }}
-      >
+      <div className="mb-3 flex items-center justify-between gap-4 rounded-xl border border-neutral-200 bg-neutral-0 p-4">
         <div>
-          <div style={{ fontWeight: 800, fontSize: 15 }}>
-            {pendentes.length > 0 ? `${pendentes.length} pauta${pendentes.length > 1 ? "s" : ""} pendente${pendentes.length > 1 ? "s" : ""}` : "Tudo revisado"}
+          <div className="text-[15px] font-bold text-neutral-900">
+            {pendentes.length > 0
+              ? `${pendentes.length} pauta${pendentes.length > 1 ? "s" : ""} pendente${pendentes.length > 1 ? "s" : ""}`
+              : "Tudo revisado"}
           </div>
-          <div style={{ fontSize: 12.5, color: "var(--text-muted)" }}>
-            {ultimaAtualizacao ? `Última pauta encontrada: ${ultimaAtualizacao}` : "Ainda sem checagem"}
-          </div>
+          <div className="text-xs text-neutral-500">{ultimaAtualizacao ? `Última pauta encontrada: ${ultimaAtualizacao}` : "Ainda sem checagem"}</div>
         </div>
         <button
           type="button"
           onClick={dispararAtualizacao}
           disabled={atualizando}
-          style={{
-            background: "var(--accent)",
-            color: "var(--accent-contrast)",
-            border: "none",
-            borderRadius: 3,
-            padding: "11px 18px",
-            fontWeight: 800,
-            fontSize: 13.5,
-            cursor: atualizando ? "default" : "pointer",
-            opacity: atualizando ? 0.7 : 1,
-            whiteSpace: "nowrap",
-          }}
+          className="cursor-pointer rounded-lg bg-brand-500 px-4.5 py-2.5 text-sm font-bold whitespace-nowrap text-white transition-colors hover:bg-brand-600 disabled:cursor-default disabled:opacity-70"
         >
           {atualizando ? "Verificando fontes…" : "Atualizar agora"}
         </button>
       </div>
 
-      {erro && <p style={{ color: "#c0392b", fontSize: 13, marginBottom: 16 }}>{erro}</p>}
+      {erro && (
+        <p className="mb-4 rounded-lg bg-danger-50 px-3.5 py-2.5 text-sm text-danger-500" role="alert">
+          {erro}
+        </p>
+      )}
 
       {fontes.length > 0 && (
-        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 20 }}>
-          <button type="button" onClick={() => setFiltro("todas")} style={botaoFiltro(filtro === "todas")}>
-            Todas as fontes
-          </button>
+        <div className="mb-5 flex flex-wrap gap-2">
+          <FiltroChip label="Todas as fontes" ativo={filtro === "todas"} onClick={() => setFiltro("todas")} />
           {fontes.map(([categoria, nome]) => (
-            <button key={categoria} type="button" onClick={() => setFiltro(categoria)} style={botaoFiltro(filtro === categoria)}>
-              {nome}
-            </button>
+            <FiltroChip key={categoria} label={nome} ativo={filtro === categoria} onClick={() => setFiltro(categoria)} />
           ))}
         </div>
       )}
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+      <div className="flex flex-col gap-2.5">
         {itens.length === 0 && (
-          <p style={{ fontSize: 13.5, color: "var(--text-muted)", textAlign: "center", padding: "24px 0" }}>
-            Nenhuma pauta ainda — clique em &quot;Atualizar agora&quot; pra checar as fontes.
-          </p>
+          <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-0 px-6 py-14 text-center">
+            <p className="text-sm text-neutral-500">Nenhuma pauta ainda — clique em &quot;Atualizar agora&quot; pra checar as fontes.</p>
+          </div>
         )}
         {itens.length > 0 && pendentes.length === 0 && (
-          <p style={{ fontSize: 13.5, color: "var(--text-muted)", textAlign: "center", padding: "24px 0" }}>
-            Nenhuma pauta pendente com esse filtro.
-          </p>
+          <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-0 px-6 py-14 text-center">
+            <p className="text-sm text-neutral-500">Nenhuma pauta pendente com esse filtro.</p>
+          </div>
         )}
         {pendentes.map((item) => (
           <CardItem key={item.id} item={item} onMudarStatus={mudarStatus} />
@@ -171,16 +136,16 @@ export function RadarClient({ pautasIniciais }: { pautasIniciais: PautaView[] })
       </div>
 
       {tratadas.length > 0 && (
-        <div style={{ marginTop: 24 }}>
+        <div className="mt-6">
           <button
             type="button"
             onClick={() => setMostrarTratadas((v) => !v)}
-            style={{ border: "none", background: "none", color: "var(--text-muted)", fontSize: 12.5, fontWeight: 700, cursor: "pointer", padding: 0 }}
+            className="cursor-pointer text-xs font-bold text-neutral-500 hover:text-neutral-700"
           >
             {mostrarTratadas ? "Ocultar" : "Ver"} {tratadas.length} pauta{tratadas.length > 1 ? "s" : ""} já tratada{tratadas.length > 1 ? "s" : ""} →
           </button>
           {mostrarTratadas && (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginTop: 12, opacity: 0.65 }}>
+            <div className="mt-3 flex flex-col gap-2.5 opacity-60">
               {tratadas.map((item) => (
                 <CardItem key={item.id} item={item} onMudarStatus={mudarStatus} />
               ))}
@@ -192,85 +157,84 @@ export function RadarClient({ pautasIniciais }: { pautasIniciais: PautaView[] })
   );
 }
 
-function CardItem({ item, onMudarStatus }: { item: PautaView; onMudarStatus: (id: string, status: PautaView["status"]) => void }) {
+function FiltroChip({ label, ativo, onClick }: { label: string; ativo: boolean; onClick: () => void }) {
   return (
-    <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 4, padding: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-        {item.status === "pendente" && <span style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--accent)", flex: "none" }} />}
-        <span style={{ fontSize: 11.5, fontWeight: 800, textTransform: "uppercase", letterSpacing: 0.4, color: "var(--text-muted)" }}>
-          {item.fonte.nome}
-        </span>
-        <span style={{ fontSize: 11.5, color: "var(--text-muted)" }}>· {formatoData.format(new Date(item.descobertoEm))}</span>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`cursor-pointer rounded-full border px-3.5 py-1.5 text-xs font-bold transition-colors ${
+        ativo ? "border-brand-500 bg-brand-50 text-brand-700" : "border-neutral-200 bg-neutral-0 text-neutral-500 hover:border-neutral-300"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}
+
+function CardItem({ item, onMudarStatus }: { item: PautaView; onMudarStatus: (id: string, status: PautaView["status"]) => void }) {
+  const relevante = item.pontuacao !== null && item.pontuacao >= LIMIAR_RELEVANTE;
+
+  return (
+    <div className="rounded-xl border border-neutral-200 bg-neutral-0 p-4">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        {item.status === "pendente" && <span className="h-1.5 w-1.5 flex-none rounded-full bg-brand-500" aria-hidden />}
+        <span className="text-[11px] font-extrabold tracking-wide text-neutral-500 uppercase">{item.fonte.nome}</span>
+        <span className="text-[11px] text-neutral-400">· {formatoData.format(new Date(item.descobertoEm))}</span>
         {item.pontuacao !== null && (
           <span
             title="Pontuação de relevância (Haiku) — prioridade sugerida, não é filtro definitivo."
-            style={{
-              fontSize: 11,
-              fontWeight: 800,
-              color: item.pontuacao >= 5 ? "var(--accent)" : "var(--text-muted)",
-              border: `1px solid ${item.pontuacao >= 5 ? "var(--accent)" : "var(--border)"}`,
-              borderRadius: 10,
-              padding: "1px 7px",
-            }}
+            className={`rounded-full border px-2 py-0.5 text-[11px] font-extrabold ${
+              relevante ? "border-brand-200 bg-brand-50 text-brand-700" : "border-neutral-200 text-neutral-400"
+            }`}
           >
             {item.pontuacao}/10
           </span>
         )}
-        {item.status === "apuracao" && <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 800, color: "var(--accent)" }}>EM APURAÇÃO</span>}
+        {item.status === "apuracao" && (
+          <span className="ml-auto rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-extrabold text-brand-700">EM APURAÇÃO</span>
+        )}
         {item.status === "dispensada" && (
-          <span style={{ marginLeft: "auto", fontSize: 11, fontWeight: 800, color: "var(--text-muted)" }}>
+          <span className="ml-auto text-[11px] font-extrabold text-neutral-400">
             {item.descarteAutomatico ? "DESCARTE AUTOMÁTICO" : "DISPENSADA"}
           </span>
         )}
       </div>
 
-      <div style={{ fontSize: 15, fontWeight: 700, lineHeight: 1.35, marginBottom: 6 }}>{item.titulo}</div>
-      {item.resumo && <p style={{ fontSize: 13, color: "var(--text-muted)", lineHeight: 1.5, margin: "0 0 12px" }}>{item.resumo}</p>}
+      <div className="mb-1.5 text-[15px] leading-snug font-bold text-neutral-900">{item.titulo}</div>
+      {item.resumo && <p className="mb-3 text-[13px] leading-relaxed text-neutral-600">{item.resumo}</p>}
       {item.categorias.length > 0 && (
-        <p style={{ fontSize: 11.5, color: "var(--text-muted)", margin: "0 0 12px" }}>Editoria: {item.categorias.join(", ")}</p>
+        <div className="mb-3 flex flex-wrap gap-1.5">
+          {item.categorias.map((categoria) => (
+            <span key={categoria} className="rounded-full bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600">
+              {categoria}
+            </span>
+          ))}
+        </div>
       )}
 
-      <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+      <div className="flex items-center gap-4">
         {item.status === "pendente" && (
           <>
-            <button type="button" onClick={() => onMudarStatus(item.id, "apuracao")} style={botaoAcao(true)}>
+            <button
+              type="button"
+              onClick={() => onMudarStatus(item.id, "apuracao")}
+              className="cursor-pointer rounded-md bg-brand-500 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-brand-600"
+            >
               Mover pra apuração
             </button>
-            <button type="button" onClick={() => onMudarStatus(item.id, "dispensada")} style={botaoAcao(false)}>
+            <button
+              type="button"
+              onClick={() => onMudarStatus(item.id, "dispensada")}
+              className="cursor-pointer rounded-md border border-neutral-200 px-3 py-1.5 text-xs font-bold text-neutral-600 transition-colors hover:bg-neutral-50"
+            >
               Dispensar
             </button>
           </>
         )}
-        <a href={item.urlOrigem} target="_blank" rel="noreferrer" style={{ fontSize: 12.5, fontWeight: 700 }}>
+        <a href={item.urlOrigem} target="_blank" rel="noreferrer" className="text-xs font-bold text-brand-600 hover:text-brand-700">
           Abrir fonte ↗
         </a>
       </div>
     </div>
   );
-}
-
-function botaoFiltro(ativo: boolean): React.CSSProperties {
-  return {
-    border: `1px solid ${ativo ? "var(--accent)" : "var(--border)"}`,
-    background: ativo ? "#eef1ff" : "var(--surface)",
-    color: ativo ? "var(--accent)" : "var(--text-muted)",
-    borderRadius: 20,
-    padding: "6px 13px",
-    fontSize: 12.5,
-    fontWeight: 700,
-    cursor: "pointer",
-  };
-}
-
-function botaoAcao(primario: boolean): React.CSSProperties {
-  return {
-    border: primario ? "none" : "1px solid var(--border)",
-    background: primario ? "var(--accent)" : "var(--surface)",
-    color: primario ? "var(--accent-contrast)" : "var(--text-muted)",
-    borderRadius: 3,
-    padding: "8px 13px",
-    fontSize: 12.5,
-    fontWeight: 700,
-    cursor: "pointer",
-  };
 }

@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
-import Link from "next/link";
+import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
 
 type Tipo = "foto" | "card";
 type Tamanho = "feed" | "stories";
@@ -143,68 +142,61 @@ export default function PaginaGerador() {
   }
 
   return (
-    <main style={{ maxWidth: 1180, margin: "0 auto", padding: "28px 20px 64px" }}>
-      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
-        <h1 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-muted)", margin: 0 }}>Editor de posts</h1>
-        <nav style={{ display: "flex", gap: 16 }}>
-          <Link href="/radar" style={{ fontSize: 13, fontWeight: 700 }}>
-            Radar de pautas
-          </Link>
-          <Link href="/historico" style={{ fontSize: 13, fontWeight: 700 }}>
-            Ver histórico →
-          </Link>
-        </nav>
-      </header>
+    <main className="mx-auto max-w-5xl px-5 py-8">
+      <h1 className="mb-1 font-serif text-2xl font-semibold text-neutral-900">Editor de posts</h1>
+      <p className="mb-7 text-sm text-neutral-500">Gere a imagem com a identidade visual da Réplica e baixe direto pro Instagram.</p>
 
-      <div style={{ display: "grid", gridTemplateColumns: "minmax(300px, 380px) 1fr", gap: 28, alignItems: "start" }}>
-        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 4, padding: 22 }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", border: "1px solid var(--border)", borderRadius: 3, overflow: "hidden", marginBottom: 14 }}>
-            <button type="button" onClick={() => setTipo("foto")} style={botaoSegmento(tipo === "foto")}>
-              Notícia com foto
-            </button>
-            <button type="button" onClick={() => setTipo("card")} style={botaoSegmento(tipo === "card")}>
-              Card oficial
-            </button>
-          </div>
-
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", border: "1px solid var(--border)", borderRadius: 3, overflow: "hidden", marginBottom: 20 }}>
-            <button type="button" onClick={() => setTamanho("feed")} style={botaoSegmento(tamanho === "feed", true)}>
-              Feed (4:5)
-            </button>
-            <button type="button" onClick={() => setTamanho("stories")} style={botaoSegmento(tamanho === "stories", true)}>
-              Stories (9:16)
-            </button>
-          </div>
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(300px,380px)_1fr]">
+        <div className="rounded-xl border border-neutral-200 bg-neutral-0 p-5">
+          <Segmentado
+            opcoes={[
+              { valor: "foto", label: "Notícia com foto" },
+              { valor: "card", label: "Card oficial" },
+            ]}
+            valor={tipo}
+            onMudar={setTipo}
+            className="mb-3.5"
+          />
+          <Segmentado
+            opcoes={[
+              { valor: "feed", label: "Feed (4:5)" },
+              { valor: "stories", label: "Stories (9:16)" },
+            ]}
+            valor={tamanho}
+            onMudar={setTamanho}
+            className="mb-5"
+          />
 
           {tipo === "foto" ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div className="flex flex-col gap-5">
               <Campo label="Imagem" dica="Foto real da matéria — sem foto própria, use o card oficial.">
-                <input type="file" accept="image/*" onChange={aoTrocarImagem} />
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={aoTrocarImagem}
+                  className="w-full cursor-pointer text-sm text-neutral-600 file:mr-3 file:cursor-pointer file:rounded-md file:border-0 file:bg-neutral-100 file:px-3 file:py-2 file:text-xs file:font-bold file:text-neutral-700 hover:file:bg-neutral-200"
+                />
               </Campo>
               <Campo label="Chamada" dica="Provocação/gancho — não é categoria.">
-                <input value={tag} onChange={(e) => setTag(e.target.value)} style={inputStyle} />
+                <input value={tag} onChange={(e) => setTag(e.target.value)} className={campoInputClasse} />
               </Campo>
               <Campo label="Manchete" dica="Envolva um trecho em **asteriscos** para o grifo azul. No máximo um.">
-                <textarea value={manicheteRaw} onChange={(e) => setManicheteRaw(e.target.value)} style={{ ...inputStyle, minHeight: 84 }} />
+                <textarea value={manicheteRaw} onChange={(e) => setManicheteRaw(e.target.value)} className={`${campoInputClasse} min-h-21 resize-y`} />
               </Campo>
             </div>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+            <div className="flex flex-col gap-5">
               <Campo label="Tema">
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button type="button" onClick={() => setTema("claro")} style={botaoTema(tema === "claro")}>
-                    Claro
-                  </button>
-                  <button type="button" onClick={() => setTema("escuro")} style={botaoTema(tema === "escuro")}>
-                    Escuro
-                  </button>
+                <div className="flex gap-2">
+                  <BotaoPill label="Claro" ativo={tema === "claro"} onClick={() => setTema("claro")} />
+                  <BotaoPill label="Escuro" ativo={tema === "escuro"} onClick={() => setTema("escuro")} />
                 </div>
               </Campo>
               <Campo label="Rótulo" dica='Ex.: "Em pauta", "Opinião" — ou uma chamada curta.'>
-                <input value={rotulo} onChange={(e) => setRotulo(e.target.value)} style={inputStyle} />
+                <input value={rotulo} onChange={(e) => setRotulo(e.target.value)} className={campoInputClasse} />
               </Campo>
               <Campo label="Manchete" dica="Sem grifo neste formato — segue o brandbook à risca.">
-                <textarea value={manchete} onChange={(e) => setManchete(e.target.value)} style={{ ...inputStyle, minHeight: 84 }} />
+                <textarea value={manchete} onChange={(e) => setManchete(e.target.value)} className={`${campoInputClasse} min-h-21 resize-y`} />
               </Campo>
             </div>
           )}
@@ -213,54 +205,38 @@ export default function PaginaGerador() {
             type="button"
             onClick={baixarImagem}
             disabled={!previewUrl || salvando}
-            style={{
-              width: "100%",
-              marginTop: 22,
-              background: "var(--accent)",
-              color: "var(--accent-contrast)",
-              border: "none",
-              borderRadius: 3,
-              padding: 14,
-              fontWeight: 800,
-              fontSize: 15,
-              cursor: !previewUrl || salvando ? "default" : "pointer",
-              opacity: !previewUrl || salvando ? 0.6 : 1,
-            }}
+            className="mt-6 w-full cursor-pointer rounded-lg bg-brand-500 py-3.5 text-[15px] font-bold text-white transition-colors hover:bg-brand-600 disabled:cursor-default disabled:opacity-60"
           >
             {salvando ? "Salvando…" : "Baixar imagem"}
           </button>
-          {salvo && <p style={{ color: "#1a7f37", fontSize: 13, marginTop: 10 }}>Baixado e salvo no histórico.</p>}
-          {erro && <p style={{ color: "#c0392b", fontSize: 13, marginTop: 10 }}>{erro}</p>}
+          {salvo && <p className="mt-2.5 text-sm text-success-500">Baixado e salvo no histórico.</p>}
+          {erro && (
+            <p className="mt-2.5 text-sm text-danger-500" role="alert">
+              {erro}
+            </p>
+          )}
         </div>
 
-        <div style={{ background: "var(--surface)", border: "1px solid var(--border)", borderRadius: 4, padding: 22 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <h2 style={{ fontSize: 13, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, color: "var(--text-muted)", margin: 0 }}>
-              Preview
-            </h2>
-            {gerandoPreview && <span style={{ fontSize: 12, color: "var(--text-muted)" }}>Atualizando…</span>}
+        <div className="rounded-xl border border-neutral-200 bg-neutral-0 p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-xs font-bold tracking-wide text-neutral-500 uppercase">Preview</h2>
+            {gerandoPreview && <span className="text-xs text-neutral-400">Atualizando…</span>}
           </div>
 
           <div
-            style={{
-              width: "100%",
-              maxWidth: 380,
-              margin: "0 auto",
-              aspectRatio: RAZAO_ASPECTO[tamanho],
-              background: "var(--surface-2)",
-              border: "1px solid var(--border)",
-              borderRadius: 4,
-              overflow: "hidden",
-              position: "relative",
-            }}
+            className="relative mx-auto w-full max-w-[380px] overflow-hidden rounded-lg border border-neutral-200 bg-neutral-100"
+            style={{ aspectRatio: RAZAO_ASPECTO[tamanho] }}
           >
             {previewUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={previewUrl} alt="Preview do post" style={{ width: "100%", height: "100%", objectFit: "cover", opacity: gerandoPreview ? 0.6 : 1, transition: "opacity 150ms" }} />
+              <img
+                src={previewUrl}
+                alt="Preview do post"
+                className="h-full w-full object-cover transition-opacity duration-150"
+                style={{ opacity: gerandoPreview ? 0.6 : 1 }}
+              />
             ) : (
-              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text-muted)", fontSize: 13, textAlign: "center", padding: 20 }}>
-                Carregando preview…
-              </div>
+              <div className="absolute inset-0 flex items-center justify-center p-5 text-center text-sm text-neutral-400">Carregando preview…</div>
             )}
           </div>
         </div>
@@ -269,49 +245,60 @@ export default function PaginaGerador() {
   );
 }
 
-function Campo({ label, dica, children }: { label: string; dica?: string; children: React.ReactNode }) {
+function Campo({ label, dica, children }: { label: string; dica?: string; children: ReactNode }) {
   return (
-    <label style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-      <span style={{ fontSize: 12.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, color: "var(--text-muted)" }}>{label}</span>
-      {dica && <span style={{ fontSize: 12.5, color: "var(--text-muted)" }}>{dica}</span>}
+    <label className="flex flex-col gap-1.5">
+      <span className="text-xs font-bold tracking-wide text-neutral-500 uppercase">{label}</span>
+      {dica && <span className="text-xs text-neutral-400">{dica}</span>}
       {children}
     </label>
   );
 }
 
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  background: "var(--bg)",
-  border: "1px solid var(--border)",
-  borderRadius: 3,
-  color: "var(--text)",
-  fontSize: 15,
-  padding: "10px 12px",
-  resize: "vertical",
-};
+const campoInputClasse =
+  "w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-[15px] text-neutral-900 outline-none transition-colors focus:border-brand-500 focus:bg-neutral-0";
 
-function botaoSegmento(ativo: boolean, secundario = false): React.CSSProperties {
-  return {
-    border: "none",
-    background: ativo ? (secundario ? "var(--surface-2)" : "var(--accent)") : "var(--surface)",
-    color: ativo ? (secundario ? "var(--text)" : "var(--accent-contrast)") : "var(--text-muted)",
-    fontWeight: 700,
-    fontSize: 13.5,
-    padding: "11px 8px",
-    cursor: "pointer",
-    boxShadow: ativo && secundario ? "inset 0 0 0 1.5px var(--accent)" : "none",
-  };
+function Segmentado<T extends string>({
+  opcoes,
+  valor,
+  onMudar,
+  className = "",
+}: {
+  opcoes: { valor: T; label: string }[];
+  valor: T;
+  onMudar: (valor: T) => void;
+  className?: string;
+}) {
+  return (
+    <div className={`grid grid-cols-2 overflow-hidden rounded-lg border border-neutral-200 ${className}`}>
+      {opcoes.map((opcao) => (
+        <button
+          key={opcao.valor}
+          type="button"
+          onClick={() => onMudar(opcao.valor)}
+          aria-pressed={valor === opcao.valor}
+          className={`cursor-pointer px-2 py-2.5 text-[13.5px] font-bold transition-colors ${
+            valor === opcao.valor ? "bg-brand-500 text-white" : "text-neutral-500 hover:bg-neutral-50"
+          }`}
+        >
+          {opcao.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
-function botaoTema(ativo: boolean): React.CSSProperties {
-  return {
-    cursor: "pointer",
-    fontWeight: 700,
-    fontSize: 13,
-    padding: "9px 14px",
-    borderRadius: 3,
-    border: `1px solid ${ativo ? "var(--accent)" : "var(--border)"}`,
-    background: ativo ? "#eef1ff" : "var(--surface)",
-    color: ativo ? "var(--accent)" : "var(--text)",
-  };
+function BotaoPill({ label, ativo, onClick }: { label: string; ativo: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={ativo}
+      className={`cursor-pointer rounded-md border px-3.5 py-2 text-[13px] font-bold transition-colors ${
+        ativo ? "border-brand-500 bg-brand-50 text-brand-700" : "border-neutral-200 text-neutral-600 hover:bg-neutral-50"
+      }`}
+    >
+      {label}
+    </button>
+  );
 }
