@@ -10,6 +10,7 @@ export type CandidatoParaInserir = CandidatoPauta & {
   justificativaIA: string;
   status: "pendente" | "dispensada";
   descarteAutomatico: boolean;
+  textoOriginal: string | null;
 };
 
 export async function listarPautas(limite = 200): Promise<PautaComFonte[]> {
@@ -34,6 +35,7 @@ export async function inserirCandidatosNovos(fonteId: string, candidatos: Candid
       chaveExterna: c.chaveExterna,
       titulo: c.titulo,
       resumo: c.resumo,
+      textoOriginal: c.textoOriginal,
       urlOrigem: c.urlOrigem,
       publicadoEm: c.publicadoEm,
       pontuacao: c.pontuacao,

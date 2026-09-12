@@ -22,9 +22,12 @@ describe("montarPromptExtracao", () => {
 
 describe("validarExtracao", () => {
   it("aceita uma lista de atos bem formada", () => {
-    const atos = validarExtracao({ atos: [{ titulo: "Decreto 084/2026", resumo: "Autoriza contenção de gastos." }] });
+    const atos = validarExtracao({
+      atos: [{ titulo: "Decreto 084/2026", resumo: "Autoriza contenção de gastos.", trechoOriginal: "Art. 1º Fica autorizada a contenção de gastos..." }],
+    });
     expect(atos).toHaveLength(1);
     expect(atos[0]!.titulo).toBe("Decreto 084/2026");
+    expect(atos[0]!.trechoOriginal).toContain("Art. 1º");
   });
 
   it("aceita lista vazia — edição sem ato relevante", () => {

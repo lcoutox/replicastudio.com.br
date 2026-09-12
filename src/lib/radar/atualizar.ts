@@ -48,6 +48,10 @@ async function classificarEmLotes(
       const { status, descarteAutomatico } = decidirStatusInicial(classificacao.pontuacao);
       prontos.push({
         ...candidato,
+        // candidato.resumo é o texto original da API (já limpo de HTML) —
+        // guarda antes de sobrescrever com o resumo reescrito pela
+        // classificação, senão a sala de apuração não teria fonte primária.
+        textoOriginal: candidato.resumo,
         resumo: classificacao.resumo,
         pontuacao: classificacao.pontuacao,
         categorias: classificacao.categorias,

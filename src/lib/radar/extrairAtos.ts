@@ -14,8 +14,9 @@ const FERRAMENTA_EXTRAIR = {
           properties: {
             titulo: { type: "string" },
             resumo: { type: "string" },
+            trechoOriginal: { type: "string", description: "Cópia literal do texto da edição, não paráfrase." },
           },
-          required: ["titulo", "resumo"],
+          required: ["titulo", "resumo", "trechoOriginal"],
         },
       },
     },
@@ -33,7 +34,7 @@ export async function extrairAtosDaEdicao(texto: string, edicao: string): Promis
 
   const resposta = await clienteAnthropic().messages.create({
     model: MODELO_HAIKU,
-    max_tokens: 4096,
+    max_tokens: 8192, // trechoOriginal por ato soma bastante em edições com muitos atos
     tools: [FERRAMENTA_EXTRAIR],
     tool_choice: { type: "tool", name: "extrair_atos" },
     messages: [{ role: "user", content: prompt }],

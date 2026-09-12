@@ -128,6 +128,10 @@ model Pauta {
   chaveExterna String      // identificador da fonte de origem (nº de edição, id de processo) — evita duplicar em novas checagens
   titulo       String
   resumo       String?     @db.Text
+  // Trecho literal (não paráfrase) extraído da fonte original antes de
+  // qualquer resumo — sem isso, a sala de apuração só tinha acesso a um
+  // resumo-de-resumo e o agente não sabia que já tínhamos o texto primário.
+  textoOriginal String?    @db.Text
   urlOrigem    String
   publicadoEm  DateTime?
   descobertoEm DateTime    @default(now())
@@ -192,12 +196,17 @@ enum PapelMensagem {
   agente
 }
 
+/// papel=usuario -> o pedido feito ao agente. papel=agente -> a sugestão de
+/// texto pro dossiê, nunca gravada sozinha. `aceito` null = ainda pendente,
+/// true = entrou no dossiê, false = descartada — histórico de auditoria de
+/// tudo que a IA já propôs, aceito ou não.
 model MensagemApuracao {
   id         String        @id @default(cuid())
   apuracao   Apuracao      @relation(fields: [apuracaoId], references: [id])
   apuracaoId String
   papel      PapelMensagem
   conteudo   String        @db.Text
+  aceito     Boolean?
   criadoEm   DateTime      @default(now())
 
   @@index([apuracaoId, criadoEm])

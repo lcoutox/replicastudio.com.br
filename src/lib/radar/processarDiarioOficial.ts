@@ -63,6 +63,7 @@ export async function processarDiarioOficial(
         justificativaIA: "Extração não encontrou ato administrativo distinto nessa edição.",
         status: "dispensada",
         descarteAutomatico: true,
+        textoOriginal: null,
       });
       continue;
     }
@@ -86,6 +87,7 @@ export async function processarDiarioOficial(
           justificativaIA: classificacao.justificativa,
           status,
           descarteAutomatico,
+          textoOriginal: ato.trechoOriginal,
         });
       } catch (erro) {
         falhas += 1;

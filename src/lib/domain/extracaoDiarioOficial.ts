@@ -10,6 +10,11 @@ import { z } from "zod";
 export const atoExtraidoSchema = z.object({
   titulo: z.string().min(1).max(200),
   resumo: z.string().min(1).max(500),
+  // Cópia literal do texto da edição, não paráfrase — é o que a sala de
+  // apuração usa como fonte primária. Sem isso só existia resumo-de-resumo
+  // (extração + classificação), e o agente na sala não sabia que já
+  // tínhamos o texto original em mãos.
+  trechoOriginal: z.string().min(1).max(3000),
 });
 
 export const extracaoSchema = z.object({ atos: z.array(atoExtraidoSchema) });
@@ -30,6 +35,7 @@ export function montarPromptExtracao(texto: string, edicao: string): string {
 Pra cada ato encontrado:
 - "titulo": tipo do ato + assunto, curto (ex.: "Portaria nº 123 — nomeação de servidor").
 - "resumo": 1-2 frases explicando o que o ato faz, em português, sem jargão de IA.
+- "trechoOriginal": trecho **copiado literalmente** do texto da edição (não parafraseado) que fundamenta esse ato — o essencial do ato em si, até uns 3-4 parágrafos. Isso vira a fonte primária consultada depois na apuração, então precisa ser cópia exata, não resumo.
 
 Se a edição não tiver nenhum ato relevante (ex.: errata sem conteúdo novo), devolva uma lista vazia — não invente ato pra preencher.
 ${truncado ? "\nATENÇÃO: o texto abaixo foi cortado por ser muito longo — extraia só o que está presente, não assuma conteúdo além dele.\n" : ""}
