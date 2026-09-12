@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { REPLICA_BRAND_KIT } from "@/lib/domain/brandKit";
 
 export default function PaginaLogin() {
   const router = useRouter();
@@ -32,31 +33,15 @@ export default function PaginaLogin() {
   }
 
   return (
-    <main
-      style={{
-        minHeight: "100dvh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        paddingInline: 20,
-      }}
-    >
-      <form
-        onSubmit={aoSubmeter}
-        style={{
-          width: 340,
-          maxWidth: "100%",
-          background: "var(--surface)",
-          border: "1px solid var(--border)",
-          borderRadius: 4,
-          padding: 28,
-          display: "flex",
-          flexDirection: "column",
-          gap: 16,
-        }}
-      >
-        <h1 style={{ fontSize: 18, margin: 0 }}>Replica Studio</h1>
-        <label style={{ display: "flex", flexDirection: "column", gap: 6, fontSize: 13, fontWeight: 700, color: "var(--text-muted)" }}>
+    <main className="flex min-h-dvh items-center justify-center px-5">
+      <form onSubmit={aoSubmeter} className="flex w-[340px] max-w-full flex-col gap-5 rounded-xl border border-neutral-200 bg-neutral-0 p-8">
+        <span
+          className="h-6 w-auto text-neutral-900 [&_svg]:h-full [&_svg]:w-auto"
+          dangerouslySetInnerHTML={{ __html: REPLICA_BRAND_KIT.logoPositivoSvg }}
+          aria-label="Réplica"
+          role="img"
+        />
+        <label className="flex flex-col gap-1.5 text-xs font-bold text-neutral-500">
           Senha
           <input
             type="password"
@@ -64,23 +49,18 @@ export default function PaginaLogin() {
             value={senha}
             onChange={(e) => setSenha(e.target.value)}
             autoFocus
-            style={{ padding: "10px 12px", border: "1px solid var(--border)", borderRadius: 3, fontSize: 15 }}
+            className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2.5 text-[15px] text-neutral-900 outline-none transition-colors focus:border-brand-500 focus:bg-neutral-0"
           />
         </label>
-        {erro && <p style={{ color: "#c0392b", fontSize: 13, margin: 0 }}>{erro}</p>}
+        {erro && (
+          <p className="text-sm text-danger-500" role="alert">
+            {erro}
+          </p>
+        )}
         <button
           type="submit"
           disabled={carregando}
-          style={{
-            background: "var(--accent)",
-            color: "var(--accent-contrast)",
-            border: "none",
-            borderRadius: 3,
-            padding: 12,
-            fontWeight: 800,
-            fontSize: 15,
-            cursor: "pointer",
-          }}
+          className="cursor-pointer rounded-lg bg-brand-500 py-3 text-[15px] font-bold text-white transition-colors hover:bg-brand-600 disabled:cursor-default disabled:opacity-70"
         >
           {carregando ? "Entrando…" : "Entrar"}
         </button>
