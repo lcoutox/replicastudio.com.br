@@ -5,10 +5,12 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import { REPLICA_BRAND_KIT, ASPA_AZUL_SVG } from "@/lib/domain/brandKit";
 
+// Mesmos termos usados pra descrever o fluxo editorial (radar -> apuração ->
+// redação -> artes) — uma palavra cada, sem qualificador redundante.
 const ITENS_NAV = [
-  { href: "/", label: "Editor", icone: IconeEditor },
-  { href: "/radar", label: "Radar de pautas", icone: IconeRadar },
-  { href: "/apuracao", label: "Salas de apuração", icone: IconeApuracao },
+  { href: "/", label: "Artes", icone: IconeEditor },
+  { href: "/radar", label: "Radar", icone: IconeRadar },
+  { href: "/apuracao", label: "Apuração", icone: IconeApuracao },
   { href: "/historico", label: "Histórico", icone: IconeHistorico },
 ];
 
