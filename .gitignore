@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+.env
+.env.local
+*.tsbuildinfo
+next-env.d.ts
+coverage
+
+# saídas do smoke test (regeneráveis, não precisam ir pro git)
+scripts/saida-*.png
