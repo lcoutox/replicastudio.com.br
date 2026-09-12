@@ -4,10 +4,11 @@ Lista viva de pendências. Atualizar sempre que uma tarefa entrar, sair ou mudar
 
 ## Agora (prioridade definida em 2026-09-12)
 
-- [ ] **Redesign de UI/UX.** App funcional mas visualmente cru (formulários com estilo inline, sem sistema de design). Usar a skill `ui-ux-pro-max`. Diário Oficial (item abaixo) já saiu do caminho, então dá pra desenhar a tela de resultado com dado real, não placeholder.
+- [ ] **Validar o redesign de UI/UX com o Lucas.** Implementado na branch `redesign-ui-ux` (não mergeada ainda) — falta revisão visual de verdade num navegador antes de ir pra `main` (sessão sem acesso a browser pra conferir screenshots durante o trabalho).
 
 ## Concluído recentemente
 
+- [x] **Redesign de UI/UX** (2026-09-12, branch `redesign-ui-ux`). Tailwind CSS v4 (antes CSS puro com inline style por página). Tokens de design ancorados no brand kit real da Réplica (azul #325BFF, preto #121212, Noto Sans/Serif) em vez de paleta genérica de SaaS — via skill `ui-ux-pro-max`. Nova barra de navegação persistente (`(app)/TopNav.tsx`) compartilhada entre editor/radar/histórico via route group `(app)`, substituindo cada página duplicar seu próprio cabeçalho — inclui o primeiro botão de logout que a UI já teve. Todas as páginas reconstruídas com componentes consistentes (card, botão, badge, input).
 - [x] **Diário Oficial: extrair conteúdo real dos PDFs** (2026-09-12). Uma edição vira 0-N `Pauta` (um por ato administrativo encontrado — decreto, portaria, extrato de contrato etc.), cada um classificado pela mesma régua das outras fontes. Pipeline: listagem HTML -> id da edição -> token de download -> PDF real -> texto (`pdf-parse`) -> extração de atos (Haiku, tool use) -> classificação por ato.
   - **Limitação conhecida:** o mapeamento edição→id de leitura é scraping de HTML (a API de dados abertos só dá o número da edição, não esse id) — mais frágil a mudança de layout do site que o resto do radar, que usa JSON estruturado.
   - **Custo de primeira checagem:** rodar pela primeira vez numa fonte com muitas edições pendentes é lento (13 fontes/16 edições ≈ 13 min, por causa do download+extração por edição). Checagens seguintes (1 edição nova/dia) devem ser rápidas. Se isso incomodar no uso real, considerar feedback de progresso incremental na UI em vez de esperar a resposta inteira.
