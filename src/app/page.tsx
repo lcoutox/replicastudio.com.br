@@ -146,9 +146,14 @@ export default function PaginaGerador() {
     <main style={{ maxWidth: 1180, margin: "0 auto", padding: "28px 20px 64px" }}>
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
         <h1 style={{ fontSize: 15, fontWeight: 700, color: "var(--text-muted)", margin: 0 }}>Editor de posts</h1>
-        <Link href="/historico" style={{ fontSize: 13, fontWeight: 700 }}>
-          Ver histórico →
-        </Link>
+        <nav style={{ display: "flex", gap: 16 }}>
+          <Link href="/radar" style={{ fontSize: 13, fontWeight: 700 }}>
+            Radar de pautas
+          </Link>
+          <Link href="/historico" style={{ fontSize: 13, fontWeight: 700 }}>
+            Ver histórico →
+          </Link>
+        </nav>
       </header>
 
       <div style={{ display: "grid", gridTemplateColumns: "minmax(300px, 380px) 1fr", gap: 28, alignItems: "start" }}>
