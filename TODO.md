@@ -4,9 +4,14 @@ Lista viva de pendências. Atualizar sempre que uma tarefa entrar, sair ou mudar
 
 ## Agora (prioridade definida em 2026-09-12)
 
-- [ ] **Diário Oficial: extrair conteúdo real dos PDFs.** Hoje o radar só sabe metadado de edição (número, data) — sem resumo de verdade, o classificador não tem o que avaliar. Precisa: baixar o PDF, extrair texto, resumir/classificar via Haiku.
-  - **Decisão em aberto antes de implementar:** uma edição pode ter mais de um ato relevante (decreto + portaria + nomeação, por exemplo). Definir se `Pauta` continua 1:1 com edição (resumo cobre tudo) ou vira 1:N (um `Pauta` por ato encontrado dentro da edição) — muda o schema.
-- [ ] **Redesign de UI/UX.** App funcional mas visualmente cru (formulários com estilo inline, sem sistema de design). Usar a skill `ui-ux-pro-max` quando for a vez. Fazer depois do item acima, pra não desenhar a tela de resultado do Diário Oficial em cima de dado placeholder.
+- [ ] **Redesign de UI/UX.** App funcional mas visualmente cru (formulários com estilo inline, sem sistema de design). Usar a skill `ui-ux-pro-max`. Diário Oficial (item abaixo) já saiu do caminho, então dá pra desenhar a tela de resultado com dado real, não placeholder.
+
+## Concluído recentemente
+
+- [x] **Diário Oficial: extrair conteúdo real dos PDFs** (2026-09-12). Uma edição vira 0-N `Pauta` (um por ato administrativo encontrado — decreto, portaria, extrato de contrato etc.), cada um classificado pela mesma régua das outras fontes. Pipeline: listagem HTML -> id da edição -> token de download -> PDF real -> texto (`pdf-parse`) -> extração de atos (Haiku, tool use) -> classificação por ato.
+  - **Limitação conhecida:** o mapeamento edição→id de leitura é scraping de HTML (a API de dados abertos só dá o número da edição, não esse id) — mais frágil a mudança de layout do site que o resto do radar, que usa JSON estruturado.
+  - **Custo de primeira checagem:** rodar pela primeira vez numa fonte com muitas edições pendentes é lento (13 fontes/16 edições ≈ 13 min, por causa do download+extração por edição). Checagens seguintes (1 edição nova/dia) devem ser rápidas. Se isso incomodar no uso real, considerar feedback de progresso incremental na UI em vez de esperar a resposta inteira.
+  - `pdf-parse` precisou entrar em `serverExternalPackages` no `next.config.ts` — o webpack do Next quebra tentando empacotar sua dependência `pdfjs-dist` ("Object.defineProperty called on non-object").
 
 ## Backlog (levantado em conversa, sem data definida)
 
@@ -14,10 +19,11 @@ Lista viva de pendências. Atualizar sempre que uma tarefa entrar, sair ou mudar
 - [ ] Fonte "TCE-MG" no radar — ainda não investigada (interface pública de busca por processo/município não mapeada).
 - [ ] Tela de gerenciamento de Fontes (hoje só via seed/código — decisão consciente de não construir CRUD ainda, ver PRD).
 - [ ] Tela de edição da Linha Editorial (hoje só via seed/código, mesma lógica acima).
-- [ ] Recalibrar o limiar de pontuação (hoje 5/10) e a régua de critérios depois de mais uso real — primeira calibração foi só com 2 exemplos de teste.
+- [ ] Recalibrar o limiar de pontuação (hoje 5/10) e a régua de critérios depois de mais uso real — primeira calibração foi só com poucos exemplos de teste.
 - [ ] Avaliar se algum dia faz sentido automatizar a checagem do radar (cron) em vez de só trigger manual — decisão consciente de começar manual, ver conversa de 2026-09-12.
 - [ ] Provisionar Postgres + bucket R2 de produção de verdade no Railway (hoje o app roda em produção mas o radar ainda não foi testado lá — só local).
 - [ ] Adicionar `ANTHROPIC_API_KEY` nas variáveis de ambiente do Railway (hoje só existe no `.env` local) antes de usar o radar em produção.
+- [ ] Local dev tem pautas de Diário Oficial no formato antigo (chaveExterna = só o número da edição, sem sufixo de ato) de antes da extração real existir — inofensivo, mas pode limpar com `TRUNCATE pauta` se incomodar visualmente.
 
 ## Não fazer agora (decisão consciente, ver docs/PRD.md)
 
