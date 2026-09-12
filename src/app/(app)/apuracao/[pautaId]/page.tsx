@@ -25,7 +25,7 @@ export default async function PaginaApuracao({ params }: { params: Promise<{ pau
       descricao: f.descricao,
       criadoEm: f.criadoEm.toISOString(),
     })),
-    mensagens: apuracao.mensagens.map((m) => ({ id: m.id, papel: m.papel, conteudo: m.conteudo, criadoEm: m.criadoEm.toISOString() })),
+    historico: apuracao.mensagens.map((m) => ({ id: m.id, papel: m.papel, conteudo: m.conteudo, aceito: m.aceito, criadoEm: m.criadoEm.toISOString() })),
   };
 
   return <ApuracaoClient inicial={view} />;
