@@ -19,9 +19,14 @@ export const novaFonteSchema = z.discriminatedUnion("tipo", [
 
 export type NovaFonte = z.infer<typeof novaFonteSchema>;
 
-export const novaMensagemSchema = z.object({
-  conteudo: z.string().trim().min(1, "Mensagem não pode ficar vazia.").max(4000),
+export const novoPedidoSchema = z.object({
+  conteudo: z.string().trim().min(1, "Pedido não pode ficar vazio.").max(4000),
+  // O agente precisa do dossiê como está na tela agora, não o que estava
+  // salvo no banco da última vez — o usuário pode ter editado sem salvar.
+  dossieAtual: z.string().max(20000),
 });
+
+export const marcarSugestaoSchema = z.object({ aceito: z.boolean() });
 
 /**
  * Um bloco de citação da API da Anthropic (web search) — link entre um

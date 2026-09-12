@@ -38,3 +38,8 @@ export async function adicionarMensagem(apuracaoId: string, papel: PapelMensagem
 export async function atualizarDossie(pautaId: string, dossie: string): Promise<Apuracao> {
   return prisma.apuracao.update({ where: { pautaId }, data: { dossie } });
 }
+
+/** Marca uma sugestão do agente como aceita (entrou no dossiê) ou descartada — nunca apagada, ver docs/PRD.md seção 10. */
+export async function marcarSugestao(mensagemId: string, aceito: boolean): Promise<MensagemApuracao> {
+  return prisma.mensagemApuracao.update({ where: { id: mensagemId }, data: { aceito } });
+}

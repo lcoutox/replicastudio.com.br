@@ -1,4 +1,4 @@
-import type { Pauta, FonteApuracao, MensagemApuracao } from "@prisma/client";
+import type { Pauta, FonteApuracao } from "@prisma/client";
 import { formatarRespostaComCitacoes, type Citacao } from "@/lib/domain/apuracao";
 import { clienteAnthropic } from "@/lib/radar/clienteAnthropic";
 
@@ -10,7 +10,7 @@ const FERRAMENTA_BUSCA_WEB = {
   max_uses: 4,
 };
 
-function montarPromptSistema(pauta: Pick<Pauta, "titulo" | "resumo">, fontes: FonteApuracao[]): string {
+function montarPromptSistema(pauta: Pick<Pauta, "titulo" | "resumo" | "textoOriginal">, fontes: FonteApuracao[], dossieAtual: string): string {
   const listaFontes =
     fontes.length === 0
       ? "(nenhuma fonte anexada ainda)"
@@ -21,43 +21,46 @@ function montarPromptSistema(pauta: Pick<Pauta, "titulo" | "resumo">, fontes: Fo
           })
           .join("\n");
 
-  return `Você ajuda um jornalista da Réplica (veículo local de Nova Serrana-MG) a apurar uma pauta. Seu papel é apoiar a apuração, não decidir o que é fato — toda conclusão que você trouxer é uma proposta que o jornalista confirma ou edita antes de virar parte do dossiê oficial.
+  return `Você ajuda um jornalista da Réplica (veículo local de Nova Serrana-MG) a escrever o dossiê de apuração de uma pauta. O dossiê é um documento único — você não conversa, você produz texto pra entrar direto nele.
 
 PAUTA: ${pauta.titulo}
-${pauta.resumo ? `Resumo inicial: ${pauta.resumo}` : ""}
+${pauta.resumo ? `Resumo: ${pauta.resumo}` : ""}
+${pauta.textoOriginal ? `\nTEXTO ORIGINAL DA FONTE (já temos isso — é a fonte primária, não precisa buscar na web pra confirmar o que já está aqui):\n${pauta.textoOriginal}\n` : ""}
 
-FONTES JÁ ANEXADAS:
+FONTES ANEXADAS PELO JORNALISTA:
 ${listaFontes}
 
-Regras:
-- Só busque na web quando o jornalista pedir explicitamente (ex.: "busque", "procure", "veja se tem mais informação sobre X") ou quando for claramente necessário pra responder o que foi perguntado. Não busque por iniciativa própria em toda mensagem.
-- "Nota sem fonte formal" é informação que o jornalista tem mas não documentou — trate como pista a confirmar, nunca como fato já estabelecido.
-- Sempre que citar algo de uma busca, deixe claro de onde veio.
-- Se não souber ou não achar nada confiável, diga isso — não invente fonte nem complete lacuna com suposição.
-- Responda em português, direto, sem jargão de IA (nada de "delve", "landscape", listas de três itens por reflexo).`;
-}
+DOSSIÊ ATUAL (o que já está escrito — não repita, complemente):
+${dossieAtual.trim() || "(vazio ainda)"}
 
-function mapearHistorico(mensagens: MensagemApuracao[]) {
-  return mensagens.map((m) => ({ role: m.papel === "usuario" ? ("user" as const) : ("assistant" as const), content: m.conteudo }));
+Regras:
+- Sua resposta inteira é a sugestão de texto a ser adicionada ao dossiê. Sem saudação, sem "aqui está", sem meta-comentário — só o conteúdo, pronto pra colar.
+- O dossiê é texto simples, não markdown renderizado — não use **negrito**, # cabeçalho, ou listas numeradas de markdown. Escreva em prosa corrida, parágrafos curtos; se precisar listar itens, use hífen simples no início da linha.
+- Só busque na web quando o pedido do jornalista pedir isso explicitamente, ou quando não houver como responder sem isso. O texto original acima já é fonte primária — busca na web serve pra achar repercussão externa (imprensa, reação pública), não pra reconfirmar o que a fonte primária já diz.
+- "Nota sem fonte formal" é pista a confirmar, nunca fato estabelecido.
+- Sempre que citar algo de uma busca, deixe claro de onde veio.
+- Se não achar nada confiável, diga isso — não invente fonte nem complete lacuna com suposição.
+- Português direto, sem jargão de IA (nada de "delve", "landscape", listas de três itens por reflexo).`;
 }
 
 /**
- * Roda uma mensagem do usuário na sala de apuração. Sonnet, não Haiku —
- * ver docs/PRD.md seção 10: isso é julgamento editorial, não classificação
- * em lote, então qualidade do modelo importa mais que custo aqui.
+ * Gera uma sugestão de texto pro dossiê a partir de um pedido do jornalista
+ * — nunca grava sozinho (ver docs/PRD.md seção 10). Sonnet, não Haiku: isso
+ * é julgamento editorial, uso deliberado do jornalista, não classificação
+ * em lote.
  */
-export async function responderNaSala(
-  pauta: Pick<Pauta, "titulo" | "resumo">,
+export async function gerarSugestao(
+  pauta: Pick<Pauta, "titulo" | "resumo" | "textoOriginal">,
   fontes: FonteApuracao[],
-  historico: MensagemApuracao[],
-  mensagemUsuario: string,
+  dossieAtual: string,
+  pedido: string,
 ): Promise<string> {
   const resposta = await clienteAnthropic().messages.create({
     model: MODELO_SONNET,
     max_tokens: 2048,
-    system: montarPromptSistema(pauta, fontes),
+    system: montarPromptSistema(pauta, fontes, dossieAtual),
     tools: [FERRAMENTA_BUSCA_WEB],
-    messages: [...mapearHistorico(historico), { role: "user", content: mensagemUsuario }],
+    messages: [{ role: "user", content: pedido }],
   });
 
   const textos: string[] = [];

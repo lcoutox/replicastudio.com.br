@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatarRespostaComCitacoes, novaFonteSchema, novaMensagemSchema } from "./apuracao";
+import { formatarRespostaComCitacoes, marcarSugestaoSchema, novaFonteSchema, novoPedidoSchema } from "./apuracao";
 
 describe("novaFonteSchema", () => {
   it("aceita link válido", () => {
@@ -30,9 +30,25 @@ describe("novaFonteSchema", () => {
   });
 });
 
-describe("novaMensagemSchema", () => {
-  it("rejeita mensagem vazia", () => {
-    expect(() => novaMensagemSchema.parse({ conteudo: "" })).toThrow();
+describe("novoPedidoSchema", () => {
+  it("rejeita pedido vazio", () => {
+    expect(() => novoPedidoSchema.parse({ conteudo: "", dossieAtual: "" })).toThrow();
+  });
+
+  it("aceita dossiê atual vazio (documento ainda não escrito)", () => {
+    const resultado = novoPedidoSchema.parse({ conteudo: "Resuma as fontes", dossieAtual: "" });
+    expect(resultado.dossieAtual).toBe("");
+  });
+});
+
+describe("marcarSugestaoSchema", () => {
+  it("aceita aceito true/false", () => {
+    expect(marcarSugestaoSchema.parse({ aceito: true }).aceito).toBe(true);
+    expect(marcarSugestaoSchema.parse({ aceito: false }).aceito).toBe(false);
+  });
+
+  it("rejeita valor não booleano", () => {
+    expect(() => marcarSugestaoSchema.parse({ aceito: "sim" })).toThrow();
   });
 });
 
