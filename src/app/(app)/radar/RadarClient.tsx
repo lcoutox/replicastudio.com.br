@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { PageHeader } from "../PageHeader";
 
 export type PautaView = {
   id: string;
@@ -85,8 +86,7 @@ export function RadarClient({ pautasIniciais }: { pautasIniciais: PautaView[] })
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-8">
-      <h1 className="mb-1 font-serif text-2xl font-semibold text-neutral-900">Radar de pautas</h1>
-      <p className="mb-6 text-sm text-neutral-500">Diário Oficial e licitações de Nova Serrana, via dados abertos da prefeitura.</p>
+      <PageHeader title="Radar de pautas" subtitle="Diário Oficial e licitações de Nova Serrana, via dados abertos da prefeitura." />
 
       <div className="mb-3 flex items-center justify-between gap-4 rounded-xl border border-neutral-200 bg-neutral-0 p-4">
         <div>

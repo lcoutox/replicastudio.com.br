@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ChangeEvent, type ReactNode } from "react";
+import { PageHeader } from "./PageHeader";
 
 type Tipo = "foto" | "card";
 type Tamanho = "feed" | "stories";
@@ -143,8 +144,7 @@ export default function PaginaGerador() {
 
   return (
     <main className="mx-auto max-w-5xl px-5 py-8">
-      <h1 className="mb-1 font-serif text-2xl font-semibold text-neutral-900">Editor de posts</h1>
-      <p className="mb-7 text-sm text-neutral-500">Gere a imagem com a identidade visual da Réplica e baixe direto pro Instagram.</p>
+      <PageHeader title="Editor de posts" subtitle="Gere a imagem com a identidade visual da Réplica e baixe direto pro Instagram." />
 
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(300px,380px)_1fr]">
         <div className="rounded-xl border border-neutral-200 bg-neutral-0 p-5">

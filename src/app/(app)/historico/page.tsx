@@ -1,6 +1,7 @@
 import { getWorkspaceUnico } from "@/lib/db/brandKitRepository";
 import { listarPosts } from "@/lib/db/postsRepository";
 import { textoSemMarcacao } from "@/lib/domain/highlightedText";
+import { PageHeader } from "../PageHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -12,8 +13,7 @@ export default async function PaginaHistorico() {
 
   return (
     <main className="mx-auto max-w-3xl px-5 py-8">
-      <h1 className="mb-1 font-serif text-2xl font-semibold text-neutral-900">Histórico de posts</h1>
-      <p className="mb-7 text-sm text-neutral-500">Tudo que já foi gerado e salvo pelo editor.</p>
+      <PageHeader title="Histórico de posts" subtitle="Tudo que já foi gerado e salvo pelo editor." />
 
       {posts.length === 0 && (
         <div className="rounded-xl border border-dashed border-neutral-300 bg-neutral-0 px-6 py-14 text-center">

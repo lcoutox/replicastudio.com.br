@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { PageHeader } from "../../PageHeader";
 
 type TipoFonte = "link" | "arquivo" | "nota";
 type Papel = "usuario" | "agente";
@@ -14,6 +14,9 @@ export type ApuracaoView = {
 };
 
 const ROTULO_TIPO: Record<TipoFonte, string> = { link: "Link", arquivo: "Arquivo", nota: "Nota sem fonte" };
+
+const PROMPT_BUSCAR_FONTES =
+  "Busque na web se há fontes (notícias, documentos oficiais, redes sociais) sobre esta pauta e resuma o que encontrar, com citação de cada fonte usada.";
 
 function lerArquivoComoDataUrl(arquivo: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -108,11 +111,11 @@ export function ApuracaoClient({ inicial }: { inicial: ApuracaoView }) {
     }
   }
 
-  async function enviarMensagem() {
-    const texto = mensagemInput.trim();
+  async function enviarMensagem(textoForcado?: string) {
+    const texto = (textoForcado ?? mensagemInput).trim();
     if (!texto || enviando) return;
 
-    setMensagemInput("");
+    if (!textoForcado) setMensagemInput("");
     setErro(null);
     setEnviando(true);
     setMensagens((atual) => [...atual, { id: `temp-${Date.now()}`, papel: "usuario", conteudo: texto, criadoEm: new Date().toISOString() }]);
@@ -140,18 +143,29 @@ export function ApuracaoClient({ inicial }: { inicial: ApuracaoView }) {
   const dossieTemMudanca = dossie !== dossieSalvo;
 
   return (
-    <main className="mx-auto flex h-[calc(100dvh-2rem)] max-w-6xl flex-col px-5 py-4">
-      <div className="mb-4 flex-none">
-        <Link href="/radar" className="text-xs font-bold text-neutral-500 hover:text-neutral-700">
-          ← Radar de pautas
-        </Link>
-        <h1 className="mt-1 font-serif text-xl font-semibold text-neutral-900">{inicial.pauta.titulo}</h1>
-        <p className="text-sm text-neutral-500">
-          {inicial.pauta.fonteNome} ·{" "}
-          <a href={inicial.pauta.urlOrigem} target="_blank" rel="noreferrer" className="font-medium text-brand-600 hover:text-brand-700">
-            Abrir fonte original ↗
-          </a>
-        </p>
+    <main className="mx-auto flex h-[calc(100dvh-2rem)] max-w-6xl flex-col px-5 py-6">
+      <div className="flex-none">
+        <PageHeader
+          voltar={{ href: "/apuracao", label: "Apuração" }}
+          eyebrow={inicial.pauta.fonteNome}
+          title={inicial.pauta.titulo}
+          subtitle={
+            <a href={inicial.pauta.urlOrigem} target="_blank" rel="noreferrer" className="font-medium text-brand-600 hover:text-brand-700">
+              Abrir fonte original ↗
+            </a>
+          }
+          acao={
+            <button
+              type="button"
+              onClick={() => enviarMensagem(PROMPT_BUSCAR_FONTES)}
+              disabled={enviando}
+              className="flex cursor-pointer items-center gap-2 rounded-lg border border-brand-200 bg-brand-50 px-3.5 py-2 text-xs font-bold whitespace-nowrap text-brand-700 transition-colors hover:bg-brand-100 disabled:cursor-default disabled:opacity-60"
+            >
+              <IconeBusca className="h-4 w-4 flex-none" />
+              Buscar fontes na web
+            </button>
+          }
+        />
       </div>
 
       {erro && (
@@ -304,7 +318,7 @@ export function ApuracaoClient({ inicial }: { inicial: ApuracaoView }) {
             />
             <button
               type="button"
-              onClick={enviarMensagem}
+              onClick={() => enviarMensagem()}
               disabled={enviando || !mensagemInput.trim()}
               className="cursor-pointer rounded-lg bg-brand-500 px-4 text-sm font-bold text-white transition-colors hover:bg-brand-600 disabled:cursor-default disabled:opacity-60"
             >
@@ -314,5 +328,14 @@ export function ApuracaoClient({ inicial }: { inicial: ApuracaoView }) {
         </div>
       </div>
     </main>
+  );
+}
+
+function IconeBusca({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden>
+      <circle cx="10.5" cy="10.5" r="6.5" />
+      <path d="M20 20l-4.5-4.5" />
+    </svg>
   );
 }
