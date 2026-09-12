@@ -1,11 +1,12 @@
 import { listarFontesAtivas } from "@/lib/db/fonteRepository";
 import { getLinhaEditorialAtiva } from "@/lib/db/brandKitRepository";
-import { inserirCandidatosNovos, type CandidatoParaInserir } from "@/lib/db/pautaRepository";
+import { inserirCandidatosNovos, edicaoJaProcessada, type CandidatoParaInserir } from "@/lib/db/pautaRepository";
 import { filtrarRecentes, type CandidatoPauta } from "@/lib/domain/pauta";
 import { decidirStatusInicial } from "@/lib/domain/classificacaoPauta";
 import { editoriasPrioritarias } from "@/lib/domain/linhaEditorial";
 import { buscarCandidatos } from "./fontesRemotas";
 import { classificarPauta } from "./classificar";
+import { processarDiarioOficial } from "./processarDiarioOficial";
 
 // Radar é sobre o que é novo, não um arquivo histórico — isso existe pra
 // evitar que a primeira checagem de uma fonte (ou uma fonte que ficou muito
@@ -79,10 +80,15 @@ export async function atualizarRadar(): Promise<ResultadoAtualizacao[]> {
     try {
       const candidatos = await buscarCandidatos({ urlApi: fonte.urlApi, urlPagina: fonte.urlPagina, categoria: fonte.categoria });
       const recentes = filtrarRecentes(candidatos, new Date(), DIAS_RECENCIA);
-      const { prontos, falhas } = await classificarEmLotes(recentes, {
-        categoriaFonte: fonte.categoria,
-        editoriasPrioritarias: editoriasPrioritarias(linhaEditorial, fonte.escopo),
-      });
+      const editorias = editoriasPrioritarias(linhaEditorial, fonte.escopo);
+
+      // Diário Oficial é 1 edição -> 0..N pautas (um ato administrativo pode
+      // virar uma pauta cada) — orquestração própria, ver processarDiarioOficial.ts.
+      const { prontos, falhas } =
+        fonte.categoria === "diario-oficial"
+          ? await processarDiarioOficial(recentes, fonte.urlPagina, editorias, (edicao) => edicaoJaProcessada(fonte.id, edicao))
+          : await classificarEmLotes(recentes, { categoriaFonte: fonte.categoria, editoriasPrioritarias: editorias });
+
       const novasPautas = await inserirCandidatosNovos(fonte.id, prontos);
       resultados.push({ fonte: fonte.nome, novasPautas, falhasClassificacao: falhas });
     } catch (erro) {

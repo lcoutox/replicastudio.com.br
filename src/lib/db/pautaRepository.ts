@@ -50,3 +50,17 @@ export async function inserirCandidatosNovos(fonteId: string, candidatos: Candid
 export async function atualizarStatusPauta(id: string, status: StatusPauta): Promise<Pauta> {
   return prisma.pauta.update({ where: { id }, data: { status } });
 }
+
+/**
+ * Diário Oficial grava um Pauta por ATO (chaveExterna = "{edicao}-{indice}"),
+ * não um por edição — então "já vi essa edição" não é mais uma checagem de
+ * chave exata, é "existe algum ato gravado com esse prefixo de edição". Vale
+ * até pra edição sem nenhum ato relevante: ver marcarEdicaoSemAtos.
+ */
+export async function edicaoJaProcessada(fonteId: string, edicao: string): Promise<boolean> {
+  const existente = await prisma.pauta.findFirst({
+    where: { fonteId, chaveExterna: { startsWith: `${edicao}-` } },
+    select: { id: true },
+  });
+  return existente !== null;
+}

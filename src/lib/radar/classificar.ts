@@ -1,8 +1,6 @@
-import Anthropic from "@anthropic-ai/sdk";
 import type { CandidatoPauta } from "@/lib/domain/pauta";
 import { montarPromptClassificacao, validarClassificacao, type ClassificacaoPauta, type ContextoClassificacao } from "@/lib/domain/classificacaoPauta";
-
-const MODELO = "claude-haiku-4-5-20251001";
+import { clienteAnthropic, MODELO_HAIKU } from "./clienteAnthropic";
 
 const FERRAMENTA_CLASSIFICAR = {
   name: "classificar_pauta",
@@ -18,16 +16,6 @@ const FERRAMENTA_CLASSIFICAR = {
     required: ["pontuacao", "categorias", "resumo", "justificativa"],
   },
 };
-
-let cliente: Anthropic | null = null;
-
-function clienteAnthropic(): Anthropic {
-  if (cliente) return cliente;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) throw new Error("Variável de ambiente ausente: ANTHROPIC_API_KEY");
-  cliente = new Anthropic({ apiKey });
-  return cliente;
-}
 
 /**
  * Classifica um candidato de pauta com Haiku — barato o bastante pra rodar
@@ -45,7 +33,7 @@ export async function classificarPauta(candidato: CandidatoPauta, contexto: Cont
   const prompt = montarPromptClassificacao(candidato, contexto);
 
   const resposta = await clienteAnthropic().messages.create({
-    model: MODELO,
+    model: MODELO_HAIKU,
     max_tokens: 512,
     tools: [FERRAMENTA_CLASSIFICAR],
     tool_choice: { type: "tool", name: "classificar_pauta" },
