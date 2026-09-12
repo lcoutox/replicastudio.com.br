@@ -22,7 +22,7 @@ export const classificacaoSchema = z.object({
   pontuacao: z.number().int().min(0).max(10),
   categorias: z.array(z.string().min(1)).default([]),
   resumo: z.string().min(1).max(400),
-  justificativa: z.string().min(1).max(300),
+  justificativa: z.string().min(1).max(600),
 });
 
 export type ClassificacaoPauta = z.infer<typeof classificacaoSchema>;
